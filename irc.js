@@ -89,7 +89,7 @@ botMaster.addListener('join', function(channel, nick, message) {
 });
 */
 botMaster.addListener('message', function (from, to, message) {
-  if(message == "opmenao") { botMaster.send('MODE', currentChannel, '+o', from); } 
+  if(message == "opme") { botMaster.send('MODE', currentChannel, '+o', from); } 
 });
 
 ////////////////////////////
