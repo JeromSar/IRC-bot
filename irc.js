@@ -83,13 +83,13 @@ botMaster.addListener('pm', function(sender, message) {
 	return;
   }
 });
-
+/*
 botMaster.addListener('join', function(channel, nick, message) {
   if((nick != "IRCbot_Master") && (nick != "IRCbot_Slave")){ botMaster.say(channel, "Welcome, " + nick + " to the Node.JS IRC"); }
 });
-
+*/
 botMaster.addListener('message', function (from, to, message) {
-  if(message == "opme") { botMaster.send('MODE', currentChannel, '+o', from); } 
+  if(message == "opmenao") { botMaster.send('MODE', currentChannel, '+o', from); } 
 });
 
 ////////////////////////////
