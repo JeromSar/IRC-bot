@@ -1,0 +1,14 @@
+{
+  "name": "irc_bot",
+  "subdomain": "DarthSalamon.irc_bot",
+  "scripts": {
+    "start": "irc.js"
+  },
+  "version": "0.0.0-3",
+  "engines": {
+    "node": "0.6.x"
+  },
+  "dependencies": {
+    "irc": "0.3.4"
+  }
+}
