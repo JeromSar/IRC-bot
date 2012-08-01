@@ -79,6 +79,11 @@ botMaster.addListener('pm', function(sender, message) {
     op(args[1], "master");
 	return;
   }
+  if(startsWith(message, "say ")){
+    console.log(sender + ": saying " + args[1]);
+    botMaster.say(currentChannel, args[1]);
+    return;
+  }
   if(startsWith(message, "deop ")){
     console.log(sender + ": deopping " + args[1]);
     deop(args[1], "master");
