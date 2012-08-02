@@ -1,1 +1,0 @@
-start: node irc.js

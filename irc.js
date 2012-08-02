@@ -8,6 +8,8 @@ process.stdin.setRawMode(true);
 
 var currentChannel = '#Node.js';
 var init = false;
+var admins = ["Bux", "whiskers75"];
+var fs = require("fs");
 
 var botMaster = new irc.Client('irc.freenode.net', 'IRCbot_Master', {
   channels: [currentChannel],
@@ -47,42 +49,53 @@ botMaster.addListener('pm', function(sender, message) {
   var args = message.split(" ");
   if(message == "init"){
     if(!init) {
+      if(!contains(admins, sender)){ return; }
       init = true;
       console.log(sender + ": initialising");
       botMaster.say(currentChannel, sender + ": Enabling IRCbot...");
       op("IRCbot_Slave", "master");
+      // Read the admins.txt file
+      fs.readFile('./admins.txt', function(error, content) {
+        if(error) { console.log(error); return;}
+        var line = line.split(content, "\r\n");
+        for(i = 0; i < line.length; i++){
+           admins[admins.length] == line;
+        }
+      });
       return;
 	} else {
       botMaster.send('MSG', sender, 'Already initialised');
       return;
 	}
   }
-  if(message == "shutdown"){
+  if(message == "shutdown") {
     stop(sender);
   }
   
   if(!init){ return; }
+  if(message == "opme") {
+    console.log(sender + ": Opping " + sender);
+    op(sender, "master", sender);
+    return;
+  }
+  
+  if(!contains(admins, sender)){ return; }
   
   if(message == "deinit") {
     botMaster.say(currentChannel, sender  + ": disabling IRCbot...");
 	init = false;
-  }
-  if(message == "opme"){
-    console.log(sender + ": Opping " + sender);
-    op(sender, "master", sender);
-	return;
   }
   if(message == "opslaves"){
     console.log(sender + ": Opping all slaves");
     op("IRCbot_Slave", "master", sender);
 	return;
   }
-  if(startsWith(message, "op ")){
+  if(startsWith(message, "op ")) {
     console.log(sender + ": opping " + args[1]);
     op(args[1], "master", sender);
 	return;
   }
-  if(startsWith(message, "say ")){
+  if(startsWith(message, "say ")) {
     var fmessage;
     for(var i = 1; i < args.length; i++){
       fmessage += i + " ";
@@ -91,12 +104,12 @@ botMaster.addListener('pm', function(sender, message) {
     botMaster.say(currentChannel, fmessage);
     return;
   }
-  if(startsWith(message, "deop ")){
+  if(startsWith(message, "deop ")) {
     console.log(sender + ": deopping " + args[1]);
     deop(args[1], "master");
 	return;
   }
-  if(startsWith(message, "switchto ")){
+  if(startsWith(message, "switchto ")) {
     var newChannel = '#' + message.split(" ")[1];
     console.log(sender + ": Switching to channel " + newChannel);
     botMaster.part(currentChannel);
@@ -106,10 +119,34 @@ botMaster.addListener('pm', function(sender, message) {
 	currentChannel = newChannel;
 	return;
   }
-  if(startsWith(message, "kick ")){
+  if(startsWith(message, "kick ")) {
     console.log(sender + ": Kicking " + args[1]);
     kick(args[1], args[2], "master", sender);
 	return;
+  }
+  if(startsWith(message, "alist ")) {
+    if(args[1] == "add"){
+      var data = fs.createWriteStream('./admins.txt', {flags: "a", encoding: "utf-8", mode: 0666});
+      data.write(args[2]);
+      admins[admins.length] = args[2];
+    } 
+    else if(args[1] == "remove") {
+      admins.splice(admins.indexOf(args[2]), 1);
+      var newadmins = [];
+      fs.readFile('./admins.txt', function(error, content) {
+        var line = line.split(content, "\r\n");
+        if(line != args[2]){
+          newadmins[newadmins.length] = line;
+        }
+      });
+      var newadminsws = fs.createWriteStream('./admins.txt', {flags: "a", encoding: "utf-8", mode: 0666});
+      for(var ii = 0; ii < newadmins.length; ii++){
+        newadminsws.write(newadmins[ii]);
+      } 
+    } 
+    else {
+      botMaster.send('MSG', sender, "syntax: alist <add/remove> [player]");
+    }
   }
 });
 /*
@@ -145,7 +182,7 @@ botMaster.addListener('+mode', function(channel, by, mode, argument, message) {
 	kick(by, "Disconnected by admin.", "master", "IRCbot_Master");
 	botSlave.say(channel, by + " has been kicked for attempting to ban IRC bots!");
   }
-  if(mode == 'o' && by != "IRCbot_Slave"){
+  if(mode == 'o' && !startsWith(by, "IRCbot")){
       op("IRCbot_Slave", "master", "IRCbot_Master"); 
   }
 });
@@ -154,9 +191,6 @@ botSlave.addListener('+mode', function(channel, by, mode, argument, message) {
     botSlave.send('MODE', channel, '-b', "IRCbot_Master");
 	kick(by, "Disconnected by admin.", "slave", "IRCbot_Slave");
 	botSlave.say(channel, by + " has been kicked for attempting to ban IRC bots!");
-  }
-  if(mode == 'o' && by != "IRCbot_Master"){
-      op('IRCbot_Master', 'slave', "IRCbot_Slave");
   }
 });
 ////
@@ -200,6 +234,16 @@ process.stdin.on('data', function(key) {
 var startsWith = function (superstr, str) {
   return !superstr.indexOf(str);
 };
+
+var contains = function (a, obj) {
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] === obj) {
+      return true;
+    }
+  }
+  return false;
+};
+
 
 var kick = function (player, reason, bot, sender) {
 if(!bot) { bot = "master"; }
